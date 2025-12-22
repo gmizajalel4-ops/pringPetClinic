@@ -7,7 +7,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
-public class SeleniumTest {
+public class SeleniumTestSuite {
 
     public static void main(String[] args) {
         // Set up Chrome options

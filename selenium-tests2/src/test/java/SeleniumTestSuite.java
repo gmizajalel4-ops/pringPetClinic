@@ -1,28 +1,23 @@
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 public class SeleniumTest {
 
     public static void main(String[] args) {
-        // Set ChromeDriver path (Optional if not using remote Selenium Grid)
-        System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver"); // Update with your path
-
         // Set up Chrome options
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless", "--no-sandbox", "--disable-dev-shm-usage", "--verbose");
 
-        // Set up RemoteWebDriver (using Selenium Grid)
         WebDriver driver = null;
         try {
-            // Connect to the Selenium Grid node
-            URL seleniumGridURL = new URL("http://172.17.0.2:4444/wd/hub"); // Change to your grid URL
+            // Connect to the Selenium Grid node (via Docker's Selenium Grid Hub URL)
+            URL seleniumGridURL = new URL("http://localhost:4444/wd/hub"); // Change to the Docker Hub URL if needed
             driver = new RemoteWebDriver(seleniumGridURL, options);
 
             // Increase timeouts

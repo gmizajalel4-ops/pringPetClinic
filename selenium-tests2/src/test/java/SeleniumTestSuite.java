@@ -25,7 +25,7 @@ public class SeleniumTestSuite {
             options
         );
 
-        // Set the page load timeout to 5 minutes
+        // Set the page load timeout to 3 minutes
         driver.manage().timeouts().pageLoadTimeout(3, TimeUnit.MINUTES);
 
         // Set the implicit wait timeout for elements to 30 seconds

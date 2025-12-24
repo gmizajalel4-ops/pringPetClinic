@@ -8,6 +8,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "jalelgm/springpetclinic"
+        MAVEN_OPTS = "-Djava.awt.headless=true"
     }
 
     stages {
@@ -25,13 +26,41 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Selenium Tests') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar -DskipTests -Dsonar.projectKey=springpetclinic'
-                }
+                sh '''
+                docker rm -f selenium 2>/dev/null || true
+                docker run -d --rm -p 4444:4444 --name selenium selenium/standalone-chrome:latest
+                sleep 5
+
+                # Change to the correct directory
+                cd selenium-tests2
+
+                # List contents to verify pom.xml exists
+                ls -la
+
+                # Run Maven tests
+                mvn test
+
+                docker stop selenium
+                '''
             }
         }
+
+        stage('SonarQube Analysis') {
+    steps {
+        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+            withSonarQubeEnv('SonarQube') {
+                sh '''
+                mvn -U org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar \
+                    -DskipTests \
+                    -Dsonar.projectKey=springpetclinic \
+                    -Dsonar.login=$SONAR_TOKEN
+                '''
+            }
+        }
+    }
+}
 
         stage('Docker Build') {
             steps {
@@ -54,13 +83,26 @@ pipeline {
             }
         }
 
-        stage('Deploy Kubernetes') {
+        stage('Deploy to Kubernetes (Minikube)') {
             steps {
                 sh '''
+                echo "Starting Minikube if not running..."
+                minikube status || minikube start --driver=docker
+
+                echo "Using Minikube context"
                 kubectl config use-context minikube
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
-                kubectl rollout status deployment/spring-petclinic
+
+                echo "Loading image into Minikube"
+                minikube image load $IMAGE_NAME:latest
+
+                echo "Deploying to Kubernetes"
+                cd k8s
+                kubectl apply -f deployment.yaml
+                kubectl apply -f service.yaml
+
+                echo "Deployment status"
+                kubectl get pods
+                kubectl get svc
                 '''
             }
         }
